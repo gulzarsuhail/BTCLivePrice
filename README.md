@@ -1,0 +1,1 @@
+A simple webpage which fetches the Bicoin prices after every three seconds.
