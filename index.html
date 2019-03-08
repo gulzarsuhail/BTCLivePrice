@@ -1,18 +1,61 @@
 <html>
-    <head>
-        <title>Bitcoin Live Price</title>
-        <link rel="icon" type="image/x-icon" href="./favicon.png"/>
-        <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
-        <link rel="stylesheet" href="./style.css">
-    </head>
-    <body>
-        <div id="cover" class="greenBG">
-            
-            <div class='inner'>
-                <h2>Bitcoin Current Price</h2>
-                <h1 id="price">$ <span id="usd">000</span></h1>
-            </div>
+
+<head>
+    <title>Bitcoin Live Price Tracker</title>
+    <link rel="icon" type="image/x-icon" href="./favicon.png" />
+
+
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="HandheldFriendly" content="true">
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+    <div id="liveContainer" class="liveContainer">
+        <span class="liveContainerContent" id="liveContainerContent">
+            <h2>CURRENT BITCOIN PRICE</h2>
+            <h1>$ <span id="currentPrice">0,000.0000</span></h1>
+            <span id="config">
+                <hr>
+                <h3>TRACKING INTERVAL</h3>
+                <div id="configButtons">
+                    <span class="circleButton button" id="decTimeBtn">-</span>
+                    <span class="secondsDisplay">
+                        <span id="seconds">3</span>
+                        <span class="secondsText">seconds</span>
+                    </span>
+                    <span class="circleButton button" id="incTimeBtn"">+</span>
+                    </div>
+                    <div class=" startContainer">
+                        <span class="start button" id="start">START</span>
+                </div>
+            </span>
+        </span>
+    </div>
+    <div id="recordCanvas" class="displayNone">
+        <div id="topBar">
+            <span class="start button smallbtn">STOP</span>
+            <span class="start button smallbtn">GET JSON</span>
+            <span class="start button smallbtn">RESET</span>
         </div>
-        <script src="./script.js"></script>
-    </body>
+        <div class="container">
+            <table cellspacing="0" cellpadding="0" >
+                <thead>
+                    <tr>
+                        <th>TIME</th>
+                        <th>PRICE</th>
+                        <th>DIFFERENCE</th>
+                    </tr>
+                </thead>
+                <tbody id="recordTable">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="./script.js"></script>
+</body>
+
 </html>

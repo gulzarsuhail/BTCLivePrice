@@ -1,39 +1,51 @@
-var amount = document.getElementById('usd');
-var bg = document.getElementById('cover');
-var priceUp = true;
+var amount = document.getElementById('currentPrice');
+var liveContainer = document.getElementById('liveContainer');
+var secondsEle = document.getElementById('seconds');
+var decTimeBtn = document.getElementById('decTimeBtn');
+var incTimeBtn = document.getElementById('incTimeBtn');
+var startButton = document.getElementById('start');
+var recordTable = document.getElementById('recordTable');
+// flag to prevent HTTPRequest if previous request is not complete
+var getPriceInProgress = false;
+// stores the previous rate, to check how the price has progressed
 var previousRate = 0;
+var priceUp = true;
+var initialTimer;
+var TrackedPrices = [];
 
-function repaintBackground(){
-  if (priceUp){
-    bg.style.backgroundColor = '#52c234';
+function repaintBackground() {
+  if (priceUp) {
+    liveContainer.style.backgroundColor = '#007e11';
   } else {
-   bg.style.backgroundColor = '#ff3b3b';
+    liveContainer.style.backgroundColor = '#ff3b3b';
   }
 }
 
-function setPrice(usd){
+function setNewPriceUI(success, usd) {
   amount.innerHTML = usd;
   var currentRate = parseFloat(usd.replace(/,/g, ''));
-  if (currentRate >= previousRate && !priceUp){
+  if (currentRate > previousRate && !priceUp) {
     priceUp = true;
     repaintBackground()
-  } else if (currentRate < previousRate && priceUp){
+  } else if (currentRate < previousRate && priceUp) {
     priceUp = false;
     repaintBackground();
   }
   previousRate = currentRate;
 }
 
-var getPriceInProgress = false;
 
-function getPrice(){
-  if (!(getPriceInProgress)){
+// set the current rate of BITCOIN
+function getCurrentPrice(callback, date) {
+  if (!(getPriceInProgress)) {
     getPriceInProgress = true;
     var XHR = new XMLHttpRequest();
-    XHR.onreadystatechange = function(){
-      if (XHR.readyState == 4 && XHR.status == 200){
+    XHR.onreadystatechange = function () {
+      if (XHR.readyState === 4 && XHR.status === 200) {
         var res = JSON.parse(XHR.responseText);
-        setPrice(res.bpi.USD.rate)
+        callback(true,res.bpi.USD.rate, date);
+      } else if (XHR.readyState === 4 && XHR.status != 200){
+        callback(false, "0,000.0000", date);
       }
       getPriceInProgress = false;
     }
@@ -42,7 +54,126 @@ function getPrice(){
   }
 }
 
-window.onload = function(){
-    setInterval(getPrice, 2500);
-    getPrice();
+// increments/decrements the time in UI
+function incdecTime(time) {
+  let newTime = parseInt(secondsEle.innerHTML) + time;
+  if (newTime > 0) secondsEle.innerHTML = newTime;
+}
+
+function holdTimer(btn, time, start, speedup) {
+  var t;
+  var initialTime = start;
+  var repeat = function () {
+    incdecTime(time);
+    t = setTimeout(repeat, start);
+    if (start > 50)
+      start = start / speedup;
+  }
+
+  // on mouse hold, start increment/decrement
+  btn.onmousedown = function () {
+    start = initialTime;
+    repeat();
+  }
+
+  // on mouse leave, stop the timer i.e prevent increment/decrement
+  btn.onmouseup = function () {
+    clearTimeout(t);
+  }
+  btn.addEventListener("mouseleave", function(){
+    clearTimeout(t);
+  });
+};
+
+// switches to timer UI
+function toggleTimerUI(){
+  // change border color to transparent
+  document.getElementById('liveContainerContent').classList.toggle("liveContainerContentTimerView");
+  document.getElementById('liveContainerContent').classList.toggle("noMargin");
+  liveContainer.classList.toggle("liveContainerTimerView");
+  document.getElementById("config").classList.toggle("configHidden")
+  document.querySelector(".liveContainerContent h2").classList.toggle('noMargin');
+  document.querySelector(".liveContainerContent h1").classList.toggle('noMargin');
+  document.getElementById("config").classList.toggle("displayNone");
+  document.getElementById("recordCanvas").classList.toggle("displayNone");
+}
+
+// adds the new prices to the table
+function appendToTable(success, price, difference, date){
+  var dt = new Date(date);
+  var newEle = "<tr><td>" + dt.toLocaleString() + "</td><td>" + price + "</td><td>" + difference + "</td></tr>"
+  recordTable.innerHTML = recordTable.innerHTML  + (newEle);
+}
+
+// to round float nums
+function round(value, decimals) {
+  return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+}
+
+// stores the new prices and displays in UI
+function addToTracker(success, usd, date){
+  // add price to the table
+  if (success){
+    amount.innerHTML = usd;
+    var currentRate = parseFloat(usd.replace(/,/g, ''));
+    if (currentRate > previousRate && !priceUp) {
+      priceUp = true;
+      repaintBackground()
+    } else if (currentRate < previousRate && priceUp) {
+      priceUp = false;
+      repaintBackground();
+    }
+    appendToTable (true, usd, round(currentRate - previousRate, 4), date);
+    TrackedPrices.push({
+      "time": date,
+      "price": usd,
+    })
+    previousRate = currentRate;
+  }
+}
+
+
+// starts the timer
+function startTimer(){
+  // change UI to timer UI
+  toggleTimerUI();
+  
+  // stop the default timer
+  clearInterval(initialTimer);
+
+  // set up new timer with the time set at config
+  initialTimer = setInterval(function(){
+    getCurrentPrice(addToTracker, Date.now());
+  }, parseInt(secondsEle.innerHTML) * 1000);
+  getCurrentPrice(addToTracker, Date.now());
+}
+
+// gets prices for the h1
+function resetTimer(){
+  initialTimer = setInterval(function(){
+    getCurrentPrice(setNewPriceUI);
+  }, 5000);
+  getCurrentPrice(setNewPriceUI);
+  // toggle timer UI to default
+  toggleTimerUI();
+  // reset the stored bitcoin prices
+  TrackedPrices.splice(0, TrackedPrices.length);
+  // reset the table
+  recordTable.innerHTML = "";
+}
+
+window.onload = function () {
+  
+  // to speed up the timer upon holding the button
+  holdTimer(decTimeBtn, -1, 1000, 2);
+  holdTimer(incTimeBtn, 1, 1000, 2);
+  
+  // on click on start button event
+  start.addEventListener("click", startTimer);
+  
+  // get prices initially
+  initialTimer = setInterval(function(){
+    getCurrentPrice(setNewPriceUI);
+  }, 5000);
+  getCurrentPrice(setNewPriceUI);
 }
