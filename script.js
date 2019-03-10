@@ -10,8 +10,16 @@ var getPriceInProgress = false;
 // stores the previous rate, to check how the price has progressed
 var previousRate = 0;
 var priceUp = true;
-var initialTimer;
+var timers = [];
 var TrackedPrices = [];
+
+// clears all the timers
+function clearTimers() {
+  // clear all timers in the array
+  for (var i = 0; i < timers.length; i++) {
+    clearTimeout(timers[i]);
+  }
+}
 
 function repaintBackground() {
   if (priceUp) {
@@ -43,8 +51,8 @@ function getCurrentPrice(callback, date) {
     XHR.onreadystatechange = function () {
       if (XHR.readyState === 4 && XHR.status === 200) {
         var res = JSON.parse(XHR.responseText);
-        callback(true,res.bpi.USD.rate, date);
-      } else if (XHR.readyState === 4 && XHR.status != 200){
+        callback(true, res.bpi.USD.rate, date);
+      } else if (XHR.readyState === 4 && XHR.status != 200) {
         callback(false, "0,000.0000", date);
       }
       getPriceInProgress = false;
@@ -62,7 +70,7 @@ function incdecTime(time) {
 
 function holdTimer(btn, time, start, speedup) {
   var t;
-  var initialTime = start;
+  var originalTimer = start;
   var repeat = function () {
     incdecTime(time);
     t = setTimeout(repeat, start);
@@ -72,7 +80,7 @@ function holdTimer(btn, time, start, speedup) {
 
   // on mouse hold, start increment/decrement
   btn.onmousedown = function () {
-    start = initialTime;
+    start = originalTimer;
     repeat();
   }
 
@@ -80,40 +88,68 @@ function holdTimer(btn, time, start, speedup) {
   btn.onmouseup = function () {
     clearTimeout(t);
   }
-  btn.addEventListener("mouseleave", function(){
+  btn.addEventListener("mouseleave", function () {
     clearTimeout(t);
   });
 };
 
 // switches to timer UI
-function toggleTimerUI(){
+function toggleTimerUI() {
   // change border color to transparent
   document.getElementById('liveContainerContent').classList.toggle("liveContainerContentTimerView");
   document.getElementById('liveContainerContent').classList.toggle("noMargin");
   liveContainer.classList.toggle("liveContainerTimerView");
+  // hide the config buttons
   document.getElementById("config").classList.toggle("configHidden")
+  // remove margins from hearders
   document.querySelector(".liveContainerContent h2").classList.toggle('noMargin');
   document.querySelector(".liveContainerContent h1").classList.toggle('noMargin');
   document.getElementById("config").classList.toggle("displayNone");
   document.getElementById("recordCanvas").classList.toggle("displayNone");
+  // reset the STOP button UI
+  document.getElementById("stopBtn").classList.remove("disabledBtn");
+  document.getElementById("stopBtn").innerHTML = "STOP"
+  // reset the stored bitcoin prices
+  TrackedPrices.splice(0, TrackedPrices.length);
+  // reset the table
+  recordTable.innerHTML = "";
 }
 
 // adds the new prices to the table
-function appendToTable(success, price, difference, date){
+function appendToTable(success, price, difference, date) {
   var dt = new Date(date);
-  var newEle = "<tr><td>" + dt.toLocaleString() + "</td><td>" + price + "</td><td>" + difference + "</td></tr>"
-  recordTable.innerHTML = recordTable.innerHTML  + (newEle);
+  var newEle = "";
+  if (difference > 0) {
+    newEle += "<tr class='green'>";
+  } else if (difference < 0) {
+    newEle += "<tr class='red'>";
+  } else {
+    newEle += "<tr>";
+  }
+
+  newEle += "<td>" + dt.toLocaleString() + "</td><td>$ " + price + "</td><td>";
+  if (difference > 0) newEle += "+";
+  newEle += difference + "</td></tr>"
+  recordTable.innerHTML = recordTable.innerHTML + (newEle);
 }
 
 // to round float nums
 function round(value, decimals) {
-  return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+  return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+}
+
+// stops the timer
+function stopTimer() {
+  clearTimers();
+  // change STOP button UI
+  document.getElementById("stopBtn").classList.add("disabledBtn");
+  document.getElementById("stopBtn").innerHTML = "STOPPED"
 }
 
 // stores the new prices and displays in UI
-function addToTracker(success, usd, date){
+function addToTracker(success, usd, date) {
   // add price to the table
-  if (success){
+  if (success) {
     amount.innerHTML = usd;
     var currentRate = parseFloat(usd.replace(/,/g, ''));
     if (currentRate > previousRate && !priceUp) {
@@ -123,7 +159,7 @@ function addToTracker(success, usd, date){
       priceUp = false;
       repaintBackground();
     }
-    appendToTable (true, usd, round(currentRate - previousRate, 4), date);
+    appendToTable(true, usd, round(currentRate - previousRate, 4), date);
     TrackedPrices.push({
       "time": date,
       "price": usd,
@@ -134,46 +170,54 @@ function addToTracker(success, usd, date){
 
 
 // starts the timer
-function startTimer(){
+function startTimer() {
   // change UI to timer UI
   toggleTimerUI();
-  
+
   // stop the default timer
-  clearInterval(initialTimer);
+  clearTimers();
 
   // set up new timer with the time set at config
-  initialTimer = setInterval(function(){
+  timers.push(setInterval(function () {
     getCurrentPrice(addToTracker, Date.now());
-  }, parseInt(secondsEle.innerHTML) * 1000);
+  }, parseInt(secondsEle.innerHTML) * 1000));
   getCurrentPrice(addToTracker, Date.now());
 }
 
 // gets prices for the h1
-function resetTimer(){
-  initialTimer = setInterval(function(){
+function resetTimer() {
+  timers.push(setInterval(function () {
     getCurrentPrice(setNewPriceUI);
-  }, 5000);
+  }, 5000));
   getCurrentPrice(setNewPriceUI);
   // toggle timer UI to default
   toggleTimerUI();
-  // reset the stored bitcoin prices
-  TrackedPrices.splice(0, TrackedPrices.length);
-  // reset the table
-  recordTable.innerHTML = "";
+}
+
+// downloads the JSON file
+function downloadJSON() {
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(TrackedPrices)));
+  element.setAttribute('download', "bitcoin_tracker.json");
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+
 }
 
 window.onload = function () {
-  
+
   // to speed up the timer upon holding the button
   holdTimer(decTimeBtn, -1, 1000, 2);
   holdTimer(incTimeBtn, 1, 1000, 2);
-  
+
   // on click on start button event
   start.addEventListener("click", startTimer);
-  
+
   // get prices initially
-  initialTimer = setInterval(function(){
+  timers.push(setInterval(function () {
     getCurrentPrice(setNewPriceUI);
-  }, 5000);
+  }, 5000));
   getCurrentPrice(setNewPriceUI);
 }

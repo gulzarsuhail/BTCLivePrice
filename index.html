@@ -8,12 +8,36 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="HandheldFriendly" content="true">
-
+    <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
+
+    <div id="recordCanvas" class="displayNone">
+        <div class="topBarContainer">
+            <span class="homeLogo">BTC TRACKER</span>
+            <span id="topBtns">
+                <span id="stopBtn" class="start button smallbtn" onclick="stopTimer()">STOP</span>
+                <span class="start button smallbtn" onclick="resetTimer()">RESET</span>
+                <span class="start button smallbtn" onclick="downloadJSON()">JSON</span>
+            </span>
+        </div>
+        <div class="container">
+            <table cellspacing="0" cellpadding="0">
+                <thead>
+                    <tr>
+                        <th>TIME</th>
+                        <th>PRICE</th>
+                        <th>VARIATION</th>
+                    </tr>
+                </thead>
+                <tbody id="recordTable">
+                </tbody>
+            </table>
+        </div>
+    </div>
     <div id="liveContainer" class="liveContainer">
         <span class="liveContainerContent" id="liveContainerContent">
             <h2>CURRENT BITCOIN PRICE</h2>
@@ -24,7 +48,7 @@
                 <div id="configButtons">
                     <span class="circleButton button" id="decTimeBtn">-</span>
                     <span class="secondsDisplay">
-                        <span id="seconds">3</span>
+                        <span id="seconds">30</span>
                         <span class="secondsText">seconds</span>
                     </span>
                     <span class="circleButton button" id="incTimeBtn"">+</span>
@@ -35,27 +59,6 @@
             </span>
         </span>
     </div>
-    <div id="recordCanvas" class="displayNone">
-        <div id="topBar">
-            <span class="start button smallbtn">STOP</span>
-            <span class="start button smallbtn">GET JSON</span>
-            <span class="start button smallbtn">RESET</span>
-        </div>
-        <div class="container">
-            <table cellspacing="0" cellpadding="0" >
-                <thead>
-                    <tr>
-                        <th>TIME</th>
-                        <th>PRICE</th>
-                        <th>DIFFERENCE</th>
-                    </tr>
-                </thead>
-                <tbody id="recordTable">
-                </tbody>
-            </table>
-        </div>
-    </div>
     <script src="./script.js"></script>
 </body>
-
 </html>
