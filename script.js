@@ -9,8 +9,11 @@ var recordTable = document.getElementById('recordTable');
 var getPriceInProgress = false;
 // stores the previous rate, to check how the price has progressed
 var previousRate = 0;
+// is true when price goes up else false
 var priceUp = true;
+// stores all theInterval instances
 var timers = [];
+// stores all the prices encountered
 var TrackedPrices = [];
 
 // clears all the timers
@@ -162,7 +165,7 @@ function addToTracker(success, usd, date) {
     appendToTable(true, usd, round(currentRate - previousRate, 4), date);
     TrackedPrices.push({
       "time": date,
-      "price": usd,
+      "price": currentRate,
     })
     previousRate = currentRate;
   }
@@ -203,7 +206,6 @@ function downloadJSON() {
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
-
 }
 
 window.onload = function () {

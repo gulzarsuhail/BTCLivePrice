@@ -22,6 +22,10 @@ body {
   overflow: hidden;
 }
 
+a {
+  text-decoration: none;
+}
+
 .liveContainer {
   min-height: 100%;
   width: 100%;
@@ -222,6 +226,18 @@ body {
   font-family: 'Montserrat', sans-serif;
 }
 
+img.author_logo {
+  height: 1.7em;
+  margin-left: 15px;
+  margin-right: 15px;
+  opacity: 0.5;
+  transition: all 500ms linear;
+}
+
+img.author_logo:hover {
+  opacity: 1;
+}
+
 .topBarContainer {
   -webkit-box-pack: justify;
       -ms-flex-pack: justify;
@@ -244,6 +260,12 @@ body {
   padding-left: 20px;
   padding-right: 20px;
   overflow: hidden;
+}
+
+.topBarLogo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 #topBtns {
