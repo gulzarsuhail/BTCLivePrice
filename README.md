@@ -10,4 +10,7 @@ Track Bitcoin prices in real times based on coinbase API (https://api.coindesk.c
 - RESET: Rest the prices, return to starting UI
 - JSON: Download recorded data as a JSON file
 
+# Access the hosted web page at
+## https://gulzarsuhail.github.io/BTCLivePrice/
+
 DISCLAIMER: The prices are acquired from a third-party (coinbase), and the time required to get the data might differ from request to request. Thus, at times, inaccuracy may arise.
