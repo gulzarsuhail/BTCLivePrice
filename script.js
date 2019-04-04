@@ -27,8 +27,10 @@ function clearTimers() {
 function repaintBackground() {
   if (priceUp) {
     liveContainer.style.backgroundColor = '#007e11';
+    document.body.style.backgroundColor = '#007e11';
   } else {
     liveContainer.style.backgroundColor = '#ff3b3b';
+    document.body.style.backgroundColor = '#ff3b3b';
   }
 }
 

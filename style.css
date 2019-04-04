@@ -111,7 +111,6 @@ a {
 }
 
 .displayNone {
-  /* display: none !important; */
   height: 0px !important;
   display: none !important;
 }
